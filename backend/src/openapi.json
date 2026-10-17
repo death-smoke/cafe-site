@@ -1,0 +1,463 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Кафе «Солнышко» API",
+    "version": "1.1.0",
+    "description": "API меню кафе: блюда, категории, загрузка изображений (PNG)."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Проверка состояния",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "tags": [
+          "categories"
+        ],
+        "summary": "Список категорий",
+        "responses": {
+          "200": {
+            "description": "Категории",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Category"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/menu": {
+      "get": {
+        "tags": [
+          "menu"
+        ],
+        "summary": "Список блюд (фильтрация, поиск, сортировка, пагинация)",
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Фильтр по категории"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Поиск по названию, описанию и составу"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "id",
+                "name",
+                "price",
+                "category"
+              ],
+              "default": "id"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "asc"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Страница блюд",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные параметры"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "menu"
+        ],
+        "summary": "Создать блюдо",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MenuInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Создано",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации"
+          },
+          "409": {
+            "description": "Название уже существует"
+          }
+        }
+      }
+    },
+    "/api/menu/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "menu"
+        ],
+        "summary": "Получить блюдо",
+        "responses": {
+          "200": {
+            "description": "Блюдо",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuItem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Не найдено"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "menu"
+        ],
+        "summary": "Обновить блюдо",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MenuInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Обновлено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MenuItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации"
+          },
+          "404": {
+            "description": "Не найдено"
+          },
+          "409": {
+            "description": "Название уже существует"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "menu"
+        ],
+        "summary": "Удалить блюдо",
+        "responses": {
+          "204": {
+            "description": "Удалено"
+          },
+          "404": {
+            "description": "Не найдено"
+          }
+        }
+      }
+    },
+    "/api/images": {
+      "post": {
+        "tags": [
+          "images"
+        ],
+        "summary": "Загрузить PNG-изображение",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "alt": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Изображение загружено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Image"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не PNG / нет файла"
+          },
+          "413": {
+            "description": "Файл слишком большой"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "ImageAttributes": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string"
+          },
+          "original_name": {
+            "type": "string"
+          },
+          "mime_type": {
+            "type": "string",
+            "example": "image/png"
+          },
+          "size_bytes": {
+            "type": "integer"
+          },
+          "width": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "alt": {
+            "type": "string"
+          },
+          "uploaded_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Image": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "path": {
+            "type": "string",
+            "example": "uploads/ab12.png"
+          },
+          "url": {
+            "type": "string",
+            "example": "/api/uploads/ab12.png"
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/ImageAttributes"
+          }
+        }
+      },
+      "MenuItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category_id": {
+            "type": "integer"
+          },
+          "category_name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "ingredients": {
+            "type": "string"
+          },
+          "image_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "image_url": {
+            "type": "string"
+          },
+          "image_attributes": {
+            "$ref": "#/components/schemas/ImageAttributes"
+          },
+          "price": {
+            "type": "integer"
+          }
+        }
+      },
+      "MenuInput": {
+        "type": "object",
+        "required": [
+          "name",
+          "category_id",
+          "price"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "example": "Борщ"
+          },
+          "category_id": {
+            "type": "integer",
+            "example": 2
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "ingredients": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "image_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "price": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 300
+          }
+        }
+      },
+      "MenuPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MenuItem"
+            }
+          },
+          "total": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "total_pages": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}

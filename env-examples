@@ -1,0 +1,51 @@
+# Примеры переменных окружения проекта
+
+# Общие
+COMPOSE_PROJECT_NAME=cafe
+DATA_DIR=./data
+
+# Публичный вход (nginx-балансировщик сайта)
+# Интерфейс хоста, на котором слушает сайт: 0.0.0.0 - все, 127.0.0.1 - только локально
+HTTP_BIND_ADDRESS=0.0.0.0
+# Порт на хосте
+HTTP_PORT=80
+# Порт, который nginx слушает внутри контейнера
+NGINX_LISTEN_PORT=80
+# server_name (домен/адрес сайта)
+NGINX_SERVER_NAME=_
+# DNS-резолвер для динамического поиска реплик (внутренний DNS Docker)
+NGINX_RESOLVER=127.0.0.11
+
+# Версии образов
+POSTGRES_IMAGE=postgres:16-alpine
+NGINX_IMAGE=nginx:1.27-alpine
+HAPROXY_IMAGE=haproxy:2.9-alpine
+GO_IMAGE=golang:1.22-alpine
+NODE_IMAGE=node:20-alpine
+
+# PostgreSQL
+POSTGRES_DB=cafe
+POSTGRES_USER=cafe
+POSTGRES_PASSWORD=cafe_secret
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+
+# Backend
+BACKEND_HOST=backend
+BACKEND_PORT=8080
+BACKEND_REPLICAS=2
+GIN_MODE=release
+CORS_ALLOWED_ORIGINS=http://localhost,http://127.0.0.1
+MAX_UPLOAD_MB=5
+DEFAULT_PAGE_LIMIT=20
+MAX_PAGE_LIMIT=500
+
+# HAProxy (балансировщик бэкенда)
+HAPROXY_HOST=haproxy
+HAPROXY_PORT=8081
+
+# Frontend (React + nginx)
+FRONTEND_HOST=frontend
+FRONTEND_PORT=80
+FRONTEND_REPLICAS=2
+VITE_API_URL=/api

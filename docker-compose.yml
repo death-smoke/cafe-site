@@ -1,0 +1,94 @@
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ${DATA_DIR}/postgres:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+      args:
+        GO_IMAGE: ${GO_IMAGE}
+    restart: unless-stopped
+    environment:
+      PORT: ${BACKEND_PORT}
+      GIN_MODE: ${GIN_MODE}
+      DB_HOST: ${POSTGRES_HOST}
+      DB_PORT: ${POSTGRES_PORT}
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB}
+      DEFAULT_PAGE_LIMIT: ${DEFAULT_PAGE_LIMIT}
+      MAX_PAGE_LIMIT: ${MAX_PAGE_LIMIT}
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - ${DATA_DIR}/uploads:/app/uploads
+    expose:
+      - "${BACKEND_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      replicas: ${BACKEND_REPLICAS}
+
+  haproxy:
+    image: ${HAPROXY_IMAGE}
+    restart: unless-stopped
+    environment:
+      HAPROXY_PORT: ${HAPROXY_PORT}
+      BACKEND_HOST: ${BACKEND_HOST}
+      BACKEND_PORT: ${BACKEND_PORT}
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    expose:
+      - "${HAPROXY_PORT}"
+    depends_on:
+      - backend
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NODE_IMAGE: ${NODE_IMAGE}
+        NGINX_IMAGE: ${NGINX_IMAGE}
+        VITE_API_URL: ${VITE_API_URL}
+    restart: unless-stopped
+    environment:
+      FRONTEND_PORT: ${FRONTEND_PORT}
+    expose:
+      - "${FRONTEND_PORT}"
+    deploy:
+      replicas: ${FRONTEND_REPLICAS}
+
+  nginx:
+    image: ${NGINX_IMAGE}
+    restart: unless-stopped
+    environment:
+      NGINX_LISTEN_PORT: ${NGINX_LISTEN_PORT}
+      NGINX_SERVER_NAME: ${NGINX_SERVER_NAME}
+      NGINX_RESOLVER: ${NGINX_RESOLVER}
+      FRONTEND_HOST: ${FRONTEND_HOST}
+      FRONTEND_PORT: ${FRONTEND_PORT}
+      HAPROXY_HOST: ${HAPROXY_HOST}
+      HAPROXY_PORT: ${HAPROXY_PORT}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB}
+    volumes:
+      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+    ports:
+      - "${HTTP_BIND_ADDRESS}:${HTTP_PORT}:${NGINX_LISTEN_PORT}"
+    depends_on:
+      - frontend
+      - haproxy
