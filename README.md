@@ -121,8 +121,15 @@ curl -X DELETE http://localhost/api/menu/11
 ## Экраны
 
 1. `/` **Меню** — заголовок «Кафе 'Солнышко'», «Меню», позиции по категориям. Только просмотр.
+![Главная страница меню](docs/screenshots/menu_main.png)
 2. `/search` **Поиск** — строка поиска, фильтры-чипы по категориям, окно «Состав и описание». Только просмотр.
+![Страница поиска](docs/screenshots/search_main.png)
+![Страница поиска - поиск](docs/screenshots/search_search.png)
+![Страница поиска - описание позиции](docs/screenshots/search_description.png)
 3. `/admin` **Редактирование** — все позиции по категориям с кнопками «Изменить»/«Удалить» и «+ Добавить позицию» в каждой категории (открывает форму `/dish/new?category=ID`, `/dish/:id/edit`: категория, цена, описание, состав, PNG).
+![Страница редактирования](docs/screenshots/editor_main.png)
+![Страница редактирования - изменение позиции](docs/screenshots/editor_edit_position.png)
+![Страница редактирования - добавление новой позиции](docs/screenshots/editor_new_position.png)
 
 ## CORS
 
